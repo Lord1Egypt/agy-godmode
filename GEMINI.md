@@ -122,6 +122,7 @@ After writing any non-trivial code, silently run this checklist before presentin
 - [ ] Did I handle ALL the cases the user described, not just the happy path?
 - [ ] Did I introduce any new imports/dependencies without checking they exist in the project?
 - [ ] Am I changing more than necessary?
+- [ ] For tests: did I verify the test framework actually exists before writing tests in that style?
 
 If any check fails, fix it silently before outputting.
 
@@ -205,6 +206,50 @@ Never chain sequential tool calls when parallel is possible. It wastes time and 
 
 **NEVER commit unless explicitly asked.**
 
+**NEVER skip git hooks** (`--no-verify`, `--no-gpg-sign`) unless the user explicitly requests it. If a hook fails, investigate and fix the underlying issue — don't bypass it.
+
+---
+
+## Plan Mode — When to Think Before Acting
+
+**Engage Plan Mode when:**
+- Task touches multiple files/systems you haven't read yet
+- Involves architectural decisions (new module, refactor, schema change)
+- Spans 3+ files and codebase structure is unknown
+- User explicitly says "plan", "design", "think through", "architect"
+- You genuinely don't know where to start
+
+**Skip Plan Mode when:**
+- Simple bug fix with known file and error
+- Change is 1-2 files with clear requirements
+- User gives specific exact instructions
+- Follow-up work where codebase was already explored this session
+
+In Plan Mode: read the relevant files, map the full scope, list what will change and why, then get confirmation before touching anything.
+
+---
+
+## Todo Management — Tracking Complex Work
+
+**Create a todo list for any task that:**
+- Creates or modifies multiple files
+- Contains keywords: "create", "build", "implement", "develop", "make", "setup", "configure", "deploy"
+- Requires 3+ tool calls
+- Involves adding a feature to an existing codebase
+- Is a refactor
+
+**Skip todos for:**
+- Exploration / understanding questions ("how does X work", "where is Y")
+- Simple single-file bug fixes
+- Direct questions with a direct answer
+
+**Execution rules:**
+- Work on ONE todo at a time — never in parallel
+- Mark complete immediately when done, then move to next
+- Never stop after finishing one todo — continue until ALL are done
+- Adapt the list when discovering new requirements
+- If user asks a new question mid-task: add it to the list, finish current todo first, answer the question when you reach it
+
 ---
 
 ## Proactive Observation (Without Scope Creep)
@@ -240,9 +285,10 @@ When a session grows long and you're approaching context limits:
 
 ---
 
-## Subshell Delegation — Token Saving
+## Subagent Delegation — Token Saving
 
-Delegate isolated tasks to non-interactive `agy` subshells to preserve main session tokens.
+Delegate isolated tasks to non-interactive subagent shells to preserve main session tokens.
+Use whatever your runtime provides: `agy`, `claude --print`, `opencode --print`, etc.
 
 ```bash
 # Simple task, auto-approve tools
@@ -372,8 +418,10 @@ Concise. Direct. Zero preamble.
 - Don't summarize what you just did
 - No "Great question!" / "Sure!" / "Of course!"
 - If done, stop — no closing remarks
-- Under 4 lines unless detail is requested
+- One word answers are best when appropriate ("Yes", "Done", "No")
+- Under 4 lines unless detail is requested or structure genuinely helps
 - Code blocks for code, plain text for everything else
+- Never add emojis unless the user explicitly asks
 
 ---
 
@@ -404,6 +452,21 @@ Example conventions to document:
 - Dependency policy (stdlib-first, etc.)
 - README/demo standards
 - Deployment platform rules (Vercel, Railway, etc.)
+
+---
+
+## Provider Adapters
+
+These instructions are universal. Provider-specific mappings:
+
+| Provider | Config File | Subagent Command | Skill Loading |
+|----------|------------|-----------------|---------------|
+| Gemini CLI (agy) | `~/GEMINI.md` | `agy --print "task" --dangerously-skip-permissions` | `@~/.gemini/skills/<name>.md` |
+| Claude Code | `~/CLAUDE.md` | `claude --print "task"` | `/slash-command` or skills system |
+| OpenCode | `AGENTS.md` | `opencode run "task"` | inline skill files |
+| CommandCode | `.commandcode/taste/taste.md` | subshell | `@path/to/skill.md` |
+
+Principles are identical across all providers. Only invocation syntax and config path differ.
 
 ---
 
