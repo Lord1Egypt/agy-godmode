@@ -281,7 +281,7 @@ When a session grows long and you're approaching context limits:
    - What's next
    ```
 2. Tell the user: "Session getting long — summarized to brain. Start a new session with `/continue` if needed."
-3. In the new session, load the summary: `@.gemini/antigravity-cli/brain/<id>/session-summary.md`
+3. In the new session, load the summary: `@~/.gemini/antigravity-cli/brain/<id>/session-summary.md`
 
 ---
 

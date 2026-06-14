@@ -104,7 +104,7 @@ def create_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     sub = p.add_subparsers(dest="command", required=True)
-    
+
     cmd = sub.add_parser("run", help="Run the thing")
     cmd.add_argument("input", type=Path, help="Input file")
     cmd.add_argument("-o", "--output", type=Path, default=Path("out"))
@@ -224,11 +224,11 @@ try:
 except ValueError as e:
     logger.warning("Expected failure: %s", e)
 
-# NEVER — f-string in HTML with CSS
-html = f"<style>body {{ color: red }}</style>"  # NameError: 'color'
+# NEVER — f-string in logging (always evaluates, can't be disabled)
+logger.debug(f"Processing {large_data}")  # serializes large_data even when debug is off
 
 # CORRECT
-html = "<style>body { color: red }</style>"  # plain string
+logger.debug("Processing %s", large_data)  # only serializes if debug is enabled
 
 # NEVER — blocking input() in automated scripts
 user_input = input("Continue? ")  # hangs in CI/automation

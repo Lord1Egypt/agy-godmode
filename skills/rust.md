@@ -82,7 +82,7 @@ mod tests {
     fn test_thing() {
         assert_eq!(compute(2), 4);
     }
-    
+
     #[tokio::test]
     async fn test_async_thing() {
         assert!(async_compute().await.is_ok());

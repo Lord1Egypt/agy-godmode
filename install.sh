@@ -3,10 +3,12 @@
 # Run this script on any new WSL instance or machine to activate the full setup.
 # Usage: bash install.sh
 
-set -e
+set -eu
+
+command -v python3 >/dev/null 2>&1 || { echo "Error: Python 3 is required."; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOME_DIR="${HOME:-/home/$(whoami)}"
+HOME_DIR="$HOME"
 AGY_CONFIG="$HOME_DIR/.gemini/antigravity-cli/settings.json"
 
 echo "[1/4] Installing GEMINI.md to $HOME_DIR..."
@@ -16,52 +18,44 @@ echo "      Done — $HOME_DIR/GEMINI.md"
 echo "[2/4] Installing skill files to $HOME_DIR/.gemini/skills/..."
 mkdir -p "$HOME_DIR/.gemini/skills"
 cp "$SCRIPT_DIR/skills/"*.md "$HOME_DIR/.gemini/skills/"
-echo "      Done — $(ls "$SCRIPT_DIR/skills/" | wc -l) skill files installed"
+echo "      Done — $(ls "$SCRIPT_DIR/skills/"*.md 2>/dev/null | wc -l) skill files installed"
 
 echo "[3/4] Injecting GEMINI.md into agy settings (systemPrompt)..."
 mkdir -p "$(dirname "$AGY_CONFIG")"
 
-GEMINI_CONTENT=$(cat "$HOME_DIR/GEMINI.md")
+export AGY_CONFIG_PATH="$AGY_CONFIG"
+export GEMINI_MD_PATH="$HOME_DIR/GEMINI.md"
 
 if [ -f "$AGY_CONFIG" ]; then
-    # Preserve existing settings, overwrite/add systemPrompt using python3
-    python3 - <<PYEOF
-import json, sys
-
-with open("$AGY_CONFIG") as f:
+    python3 -c '
+import json, os
+with open(os.environ["AGY_CONFIG_PATH"]) as f:
     settings = json.load(f)
-
-with open("$HOME_DIR/GEMINI.md") as f:
+with open(os.environ["GEMINI_MD_PATH"]) as f:
     settings["systemPrompt"] = f.read()
-
-with open("$AGY_CONFIG", "w") as f:
+with open(os.environ["AGY_CONFIG_PATH"], "w") as f:
     json.dump(settings, f, indent=2)
-
 print("      Merged into existing settings.json")
-PYEOF
+'
 else
-    # Create minimal settings.json with systemPrompt
-    python3 - <<PYEOF
-import json
-
-with open("$HOME_DIR/GEMINI.md") as f:
+    python3 -c '
+import json, os
+with open(os.environ["GEMINI_MD_PATH"]) as f:
     content = f.read()
-
 settings = {"systemPrompt": content}
-
-with open("$AGY_CONFIG", "w") as f:
+with open(os.environ["AGY_CONFIG_PATH"], "w") as f:
     json.dump(settings, f, indent=2)
-
 print("      Created new settings.json")
-PYEOF
+'
 fi
 
 echo "[4/4] Verifying..."
 echo "      GEMINI.md: $(wc -l < "$HOME_DIR/GEMINI.md") lines"
 echo "      settings.json: $(wc -c < "$AGY_CONFIG") bytes"
 echo "      Skills:"
+shopt -s nullglob
 for f in "$HOME_DIR/.gemini/skills/"*.md; do
-    echo "        - $(basename $f)"
+    echo "        - $(basename "$f")"
 done
 
 echo ""
